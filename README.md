@@ -4,11 +4,16 @@ hubtrend is simple command-line tool for [GithubTrends](https://github.com/trend
 ![](https://img.shields.io/badge/golang-1.5.1-blue.svg?style=flat)
 [![GoDoc](https://godoc.org/github.com/takecy/hubtrend?status.svg)](https://godoc.org/github.com/takecy/hubtrend)
 
-## Usage
+## Install
+### via Go
 ```shell
 $ go get github.com/takecy/hubtrend
 ```
+### via Binary
+[Download](https://github.com/takecy/hubtrend/releases) and copy to your `$PATH`.
 
+<br/>
+## Usage
 Print usage.
 ```shell
 $ hubtrend help
@@ -24,7 +29,6 @@ Print trend repos.
 hubtrend -l <language> -p <period> [-m] show
 ```
 
-<br/>
 ### Example
 Specific `golang` `daily`
 ```shell
