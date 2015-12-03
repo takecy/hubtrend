@@ -4,8 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 	"text/template"
 
+	"github.com/fatih/color"
 	rss "github.com/jteeuwen/go-pkg-rss"
 	"github.com/jteeuwen/go-pkg-xmlx"
 )
@@ -20,24 +22,53 @@ var (
 	}
 )
 
+var (
+	lang   string
+	period string
+	min    bool
+)
+
+var helpers = template.FuncMap{
+	"magenta": color.MagentaString,
+	"yellow":  color.YellowString,
+	"green":   color.GreenString,
+	"black":   color.BlackString,
+	"white":   color.WhiteString,
+	"blue":    color.BlueString,
+	"cyan":    color.CyanString,
+	"red":     color.RedString,
+}
+
 const itemTmpl = `
-TrendRepos:
---------------------------------------------------------------------------------------------
 {{range .}}
---------------------------------------------------------------------------------------------
-|  {{.Title}}
-|  {{.Description}}
+ - {{.Title | cyan}}
+    {{.Description}}
 {{end}}
---------------------------------------------------------------------------------------------
 `
 
-// Rss is fetch RSS
-func Rss(lang, period string) (err error) {
-	p, ok := periodM[period]
+const itemMinTmpl = `
+{{range .}}
+  {{.Title | cyan}} {{end}}
+`
+
+// NewRss is init Rss
+func NewRss(l, p string, m bool) error {
+	_p, ok := periodM[p]
 	if !ok {
 		return errors.New("bad.period -> [d]or[w]or[m]")
 	}
-	err = fetchFeed(fmt.Sprintf(rssURLFormat, lang, p), 5, nil)
+
+	lang = l
+	period = _p
+	min = m
+
+	return nil
+}
+
+// Rss is fetch RSS
+func Rss() (err error) {
+	fmt.Fprintf(os.Stdout, "\n Lang:%s Period:%s", lang, period)
+	err = fetchFeed(fmt.Sprintf(rssURLFormat, lang, period), 5, nil)
 	return
 }
 
@@ -45,23 +76,30 @@ func fetchFeed(uri string, timeout int, cr xmlx.CharsetFunc) (err error) {
 	feed := rss.New(timeout, true, chanHandler, itemHandler)
 	err = feed.Fetch(uri, cr)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "[e] %s: %s\n", uri, err)
+		fmt.Fprintf(os.Stderr, "[e] %s: %s", uri, err)
 		return
 	}
 	return
 }
 
 func chanHandler(feed *rss.Feed, newchannels []*rss.Channel) {
-	fmt.Fprintf(os.Stdout, "%d new channel(s) in %s\n", len(newchannels), feed.Url)
 }
 
 func itemHandler(feed *rss.Feed, ch *rss.Channel, newitems []*rss.Item) {
-	//	fmt.Fprintf(os.Stdout, "%d new item(s) in %s\n", len(newitems), feed.Url)
+	for i := range newitems {
+		newitems[i].Description = strings.Replace(newitems[i].Description, "\n", " ", -1)
+	}
 
-	t := template.New("item")
-	template.Must(t.Parse(itemTmpl))
-	err := t.Execute(os.Stdout, newitems)
+	err := t().Execute(os.Stdout, newitems)
 	if err != nil {
 		panic(err)
 	}
+}
+
+func t() *template.Template {
+	tm := itemTmpl
+	if min {
+		tm = itemMinTmpl
+	}
+	return template.Must(template.New("item").Funcs(helpers).Parse(tm))
 }

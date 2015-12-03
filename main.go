@@ -12,14 +12,30 @@ import (
 var (
 	l = flag.String("l", "go", "")
 	p = flag.String("p", "d", "")
+	m = flag.Bool("m", false, "")
 )
 
 const usage = `
+hubtrend is Simple command-line tool for GithubTrend.
+GithugTrend: https://github.com/trending
+more info:   https://github.com/takecy/hubtrend#readme
+
 Usage:
-  hubtrend                                  Print usage.
-  hubtrend -l <language> -p <period> show   Print Trend repos.
-                                            period is [d|w|m]. daily, weekly and monthly.
-  hubrrend ls                               Print supported languages.
+  hubtrend [options] <command>
+
+Commands:
+  help    Print usage.
+  show    Print Trend repos.
+  ls      Print supported languages.
+
+Options:
+  show:
+    -l   Specific language.
+         Supported language are by [hubtrend ls]
+         Default is [go]
+    -p   Specific period. daily->d, weekly->w, monthly->m
+         Default is [d].
+    -m   Print result with minimal layout.
 `
 
 const lsTmpl = `
@@ -37,8 +53,19 @@ func main() {
 		return
 	}
 
+	if flag.Args()[flag.NArg()-1] == "help" {
+		flag.Usage()
+		return
+	}
+
 	if flag.Args()[flag.NArg()-1] == "show" {
-		err := trender.Rss(*l, *p)
+		err := trender.NewRss(*l, *p, *m)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			return
+		}
+
+		err = trender.Rss()
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 			return
