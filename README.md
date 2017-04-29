@@ -13,6 +13,7 @@ $ go get github.com/takecy/hubtrend
 [Download](https://github.com/takecy/hubtrend/releases) and copy to your `$PATH`.
 
 <br/>
+
 ## Usage
 Print usage.
 ```shell
@@ -66,5 +67,6 @@ will print like this.
 ```
 
 <br/>
+
 ## License
 MIT
